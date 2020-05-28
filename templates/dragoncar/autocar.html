@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block autocar_block %}<li class="active">{% endblock %}
+
+{% block body_block %}
+
+<form class="form-horizontal" role="form" action="" method="post" target="targetIfr">
+
+
+  <div class="form-group" style="text-align:center">
+
+      <input id="carfixeddistance" name="carfixeddistance" type="submit" class="btn btn-primary" value="fixeddistance" style="width:150px;">
+      </br>
+      </br>
+
+
+      <input id="carstop" name="carstop" type="submit" class="btn btn-danger" value="Car Stop" style="width:150px;">
+      </br>
+      </br>
+
+</form>
+
+<iframe name="targetIfr" style="display:none"></iframe>
+
+{% endblock %}
+

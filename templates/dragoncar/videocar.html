@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block videocar_block %}<li class="active">{% endblock %}
+
+{% block body_block %}
+
+<form class="form-horizontal" role="form" action="" method="post" target="targetIfr">
+
+    <div class="row clearfix">
+            <img src='/video_feed' width="100%">
+    </div>
+
+    </br>
+    </br>
+    </br>
+
+    <div class="form-group">
+
+      <input id="powernum" type="range" name="power" min="0" max="1000">
+
+      </br>
+
+      <input id="leftup" name="leftup" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px;" float:left;>
+      <input id="up" name="up" type="submit" class="btn btn-primary" value="up" style="width:60px;" float:left;>
+      <input id="rightup" name="rightup" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px;" float:left;>
+      <input id="littleleftup" name="littleleftup" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px; float:right;">
+      <input id="littleup" name="littleup" type="submit" class="btn btn-primary" value="l-up" style="width:60px; float:right;">
+      <input id="littlerightup" name="littlerightup" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px; float:right;">
+
+      </br>
+
+      <input id="left" name="left" type="submit" class="btn btn-primary" value="left" style="width:60px;" float:left;>
+      <input id="stop" name="stop" type="submit" class="btn btn-primary" value="stop" style="width:60px;" float:left;>
+      <input id="right" name="right" type="submit" class="btn btn-primary" value="right" style="width:60px;" float:left;>
+      <input id="littleright" name="littleright" type="submit" class="btn btn-primary" value="l-right" style="width:60px; float:right;">
+      <input id="stop" name="stop" type="submit" class="btn btn-primary" value="stop" style="width:60px; float:right;">
+      <input id="littleleft" name="littleleft" type="submit" class="btn btn-primary" value="l-left" style="width:60px; float:right;">
+
+      </br>
+
+      <input id="leftdown" name="leftdown" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px;" float:left;>
+      <input id="down" name="down" type="submit" class="btn btn-primary" value="down" style="width:60px;" float:left;>
+      <input id="rightdown" name="rightdown" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px;" float:left;>
+      <input id="littleleftdown" name="littleleftdown" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px; float:right;">
+      <input id="littledown" name="littledown" type="submit" class="btn btn-primary" value="l-down" style="width:60px; float:right;">
+      <input id="littlerightdown" name="littlerightdown" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px; float:right;">
+
+    </div>
+
+</form>
+
+<iframe name="targetIfr" style="display:none"></iframe>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}
+

@@ -1,0 +1,6 @@
+*.swp
+*.pyc
+dragoncar/migrations/*
+db/*
+*.bak
+*-bak
