@@ -16,6 +16,7 @@ import time
 import threading
 import cv2
 import numpy as np
+import face_recognition
 
 
 try:
@@ -152,8 +153,7 @@ class Camera(BaseCamera):
 
     @staticmethod
     def frames():
-#        face_cascade = cv2.CascadeClassifier('/home/pi/work/django/dragoncar/dragoncar/haarcascade_frontalface_default.xml')
-        face_cascade = cv2.CascadeClassifier('/home/pi/work/django/dragoncar/dragoncar/q-320-3-15.xml')
+
         camera = cv2.VideoCapture(Camera.video_source)
         if not camera.isOpened():
             raise RuntimeError('Could not start camera.')
@@ -162,64 +162,107 @@ class Camera(BaseCamera):
         framey = camera.get(4)
         centerx = framex/2
         centery = framey/2
-
         font = cv2.FONT_HERSHEY_SIMPLEX
+
+# Load a sample picture and learn how to recognize it.
+        print("load face image: begin begin")
+        bibo_image = face_recognition.load_image_file("/home/pi/work/django/dragoncar/dragoncar/a13.jpg")
+        print("load face image: end end")
+        bibo_face_encoding = face_recognition.face_encodings(bibo_image)[0]
+
+# Create arrays of known face encodings and their names
+        known_face_encodings = [
+            bibo_face_encoding
+        ]
+        known_face_names = [
+            "bibo"
+        ]
+
+# Initialize some variables
+        face_locations = []
+        face_encodings = []
+        face_names = []
+        process_this_frame = True
 
         while True:
             # read current frame
-            _, img = camera.read()
+            _, frame = camera.read()
 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(img, 1.3, 5)
+            # Resize frame of video to 1/4 size for faster face recognition processing
+            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
-            moveinfor="move:"
-            reccenw="w:"
-            reccenh="h:"
+            # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            rgb_small_frame = small_frame[:, :, ::-1]
 
-            for (x,y,w,h) in faces:
+            if process_this_frame:
+                # Find all the faces and face encodings in the current frame of video
+                face_locations = face_recognition.face_locations(rgb_small_frame)
+                face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-                if (len(faces) > 1):
-                    break
-                img = cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-                face_area = img[y:y+h, x:x+w]
-                reccenx = x + w/2
-                recceny = y + h/2
-                pianlix = reccenx - centerx
-                pianliy = recceny - centery
-                reccenw = str(w)
-                reccenh = str(h)
-                if (pianlix > 0):
-                  inforx = " zuo " + str(abs(pianlix))
-#          print(inforx)
+                face_names = []
+                for face_encoding in face_encodings:
+                    # See if the face is a match for the known face(s)
+                    matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.50)
+                    name = "Unknown"
+
+                    # If a match was found in known_face_encodings, just use the first one.
+                    if True in matches:
+                        first_match_index = matches.index(True)
+                        name = known_face_names[first_match_index]
+
+                    face_names.append(name)
+
+            process_this_frame = not process_this_frame
+
+            # Display the results
+#            for (top, right, bottom, left), name in zip(face_locations, face_names):
+            for (x, y, w, h), name in zip(face_locations, face_names):
+                # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+                x *= 4
+                y *= 4
+                w *= 4
+                h *= 4
+#                name = name + str(x) + " " + str(y) + " " + str(w) + " " + str(h) 
+                # Draw a box around the face
+                cv2.rectangle(frame, (h, x), (y, w), (0, 255, 255), 2)
+                cv2.putText(frame, name, (h + 6, w - 6), font, 1.0, (255, 0, 255), 2)
+
+            # dragoncar turn left or right and go
+            if ((face_names.count(known_face_names[0]) == 1) and (name == known_face_names[0])):
+                lr = (h+y)/2
+                if (lr > centerx):
                   robot.left()
                   time.sleep(0.2)
-                  robot.stop()
-                else:
-                  inforx = " you " + str(abs(pianlix))
-#          print(inforx)
-                  robot.left()
+                  robot.stop
+                  print("left")
+                if (lr < centerx):
+                  robot.right()
                   time.sleep(0.2)
                   robot.stop()
+                  print("right")
 
-                bilv = round(w/framex,2)
+                bilv = round((y-h)/(w-x)*0.5, 2)
                 if (bilv > 0.5):
                   robot.stop()
+                  print("stop stop")
                 else:
                   robot.forward(speed=0.75*(1-bilv))
-
-            printtext = str(len(faces)) + " people " + str(framex) + " x " + str(framey) + " " + reccenw + " " + reccenh
-            cv2.putText(img, printtext, (10,30), font, 0.7,(255,255,255),2,cv2.LINE_AA)
+                  print("go go go")
+            else:
+                robot.stop()
+                print("no name , stop!!!")
 
             # encode as a jpeg image and return it
-            yield cv2.imencode('.jpg', img)[1].tobytes()
+            yield cv2.imencode('.jpg', frame)[1].tobytes()
 
-
+# face_names.count(known_face_names[0]) == 1
 
 
 def stopstatus():
   os.system("ps -aux | grep dragoncar | cut -d ' ' -f9 | xargs kill -9")
 
 # Create your views here.
+
 
 def fixeddistance():
     os.system("python3 " + scriptfolder + "dragoncar-fixeddistance.py")
@@ -247,6 +290,13 @@ def gen(camera):
 def video_feed(request):
     return StreamingHttpResponse(gen(Localcamera()),
         content_type='multipart/x-mixed-replace; boundary=frame')
+
+
+# opencv camera
+def followme_feed(request):
+    return StreamingHttpResponse(gen(Camera()),
+        content_type='multipart/x-mixed-replace; boundary=frame')
+
 
 
 def index(request):
@@ -342,4 +392,7 @@ def videocar(request):
 
   return render(request, 'dragoncar/videocar.html')
 
+
+def followme(request):
+  return render(request, 'dragoncar/followme.html')
 
