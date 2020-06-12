@@ -11,5 +11,8 @@ urlpatterns = [
     path('autocar/', views.autocar),
     path('followme/', views.followme),
     path('followme_feed/', views.followme_feed),
+    path('voicecontrol/', views.voicecontrol),
+    path('uploadfile/', views.uploadfile),
+    path('upload_file/', views.upload_file),
 ]
 

@@ -28,4 +28,4 @@ urlpatterns = [
 
     path('accounts/login/', auth_views.LoginView.as_view(template_name='admin/login.html')),
     path('accounts/logout/', auth_views.LogoutView.as_view()),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

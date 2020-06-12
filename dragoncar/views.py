@@ -396,3 +396,24 @@ def videocar(request):
 def followme(request):
   return render(request, 'dragoncar/followme.html')
 
+
+def voicecontrol(request):
+  return render(request, 'dragoncar/voicecontrol.html')
+
+
+def uploadfile(request):
+  return render(request, 'dragoncar/uploadfile.html')
+
+
+def upload_file(request):
+    if request.method == "POST":
+        myFile =request.FILES.get("myfile", None)
+        if not myFile:
+            print("no files for upload!")
+            return HttpResponse("no files for upload!")
+        destination = open(os.path.join("media/voice",myFile.name),'wb+')
+        for chunk in myFile.chunks():
+            destination.write(chunk)
+        destination.close()
+        print("upload over!")
+        return HttpResponse("upload over!")
