@@ -61,7 +61,7 @@ class Camera(BaseCamera):
         @staticmethod
         def frames():
                 with picamera.PiCamera() as camera:
-                        camera.resolution = (500,375)
+                        camera.resolution = (320,240)
                         time.sleep(2)
                         stream = io.BytesIO()
                         for foo in camera.capture_continuous(stream, 'jpeg',use_video_port=True):
