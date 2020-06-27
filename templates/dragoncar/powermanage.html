@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block powermanage_block %}<li class="active">{% endblock %}
+
+{% block body_block %}
+
+<form class="form-horizontal" role="form" action="" method="post" target="targetIfr">
+
+
+  <div class="form-group" style="text-align:center">
+
+      <input id="pipoweroff" name="pipoweroff" type="submit" class="btn btn-primary" value="Power Off" style="width:150px;">
+      </br>
+      </br>
+
+
+      <input id="pirestart" name="pirestart" type="submit" class="btn btn-danger" value="Restart" style="width:150px;">
+      </br>
+      </br>
+
+</form>
+
+<iframe name="targetIfr" style="display:none"></iframe>
+
+{% endblock %}
+

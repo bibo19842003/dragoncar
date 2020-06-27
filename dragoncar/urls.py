@@ -14,5 +14,6 @@ urlpatterns = [
     path('voicecontrol/', views.voicecontrol),
     path('uploadfile/', views.uploadfile),
     path('upload_file/', views.upload_file),
+    path('powermanage/', views.powermanage),
 ]
 

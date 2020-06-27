@@ -417,3 +417,20 @@ def upload_file(request):
         destination.close()
         print("upload over!")
         return HttpResponse("upload over!")
+
+
+def pipoweroff():
+    os.system("sudo poweroff")
+
+
+def pirestart():
+    os.system("sudo reboot")
+
+
+def powermanage(request):
+    if "pipoweroff" in request.POST:
+        pipoweroff()
+    if "pirestart" in request.POST:
+        pirestart()
+
+    return render(request, 'dragoncar/powermanage.html')
