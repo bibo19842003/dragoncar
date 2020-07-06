@@ -30,7 +30,6 @@ except ImportError:
 
 
 # sensor declare
-# chaoshengbo = DistanceSensor(27, 22)
 robot = Robot(left=(5, 6), right=(23, 24))
 servo = Servo(26)
 ir1 = DigitalInputDevice(25)
@@ -231,13 +230,13 @@ class Camera(BaseCamera):
             if ((face_names.count(known_face_names[0]) == 1) and (name == known_face_names[0])):
                 lr = (h+y)/2
                 if (lr > centerx):
-                  robot.left()
-                  time.sleep(0.2)
+                  robot.right(0.2)
+                  time.sleep(0.1)
                   robot.stop
                   print("left")
                 if (lr < centerx):
-                  robot.right()
-                  time.sleep(0.2)
+                  robot.left(0.2)
+                  time.sleep(0.1)
                   robot.stop()
                   print("right")
 
@@ -259,9 +258,8 @@ class Camera(BaseCamera):
 
 
 def stopstatus():
-  os.system("ps -aux | grep dragoncar | cut -d ' ' -f9 | xargs kill -9")
-
-# Create your views here.
+    os.system("ps -aux | grep dragoncar | cut -d ' ' -f9 | xargs kill -9")
+    os.system("ps -aux | grep dragoncar | cut -d ' ' -f10 | xargs kill -9")
 
 
 def fixeddistance():
