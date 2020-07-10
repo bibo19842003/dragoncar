@@ -13,3 +13,6 @@ dragoncar/migrations/*
 db/*
 *.bak
 *-bak
+logs/*
+log/*
+Sample_TFlite_model/*

@@ -15,5 +15,8 @@ urlpatterns = [
     path('uploadfile/', views.uploadfile),
     path('upload_file/', views.upload_file),
     path('powermanage/', views.powermanage),
+    path('follow/', views.follow),
+    path('followobject/', views.followobject),
+    path('followobject_feed/', views.followobject_feed),
 ]
 
