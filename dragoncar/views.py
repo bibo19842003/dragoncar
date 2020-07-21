@@ -324,7 +324,7 @@ class CameraFollowObject(BaseCamera):
         MODEL_NAME = 'Sample_TFlite_model'
         GRAPH_NAME = 'detect.tflite'
         LABELMAP_NAME = 'labelmap.txt'
-        min_conf_threshold = float(0.5)
+        min_conf_threshold = float(0.7)
         imW, imH = 640, 320
 # configure arguments --end
 
@@ -396,29 +396,20 @@ class CameraFollowObject(BaseCamera):
 
             # Retrieve detection results
             boxes = interpreter.get_tensor(output_details[0]['index'])[0] # Bounding box coordinates of detected objects
-            classesold = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
-            scoresold = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
+            classes = interpreter.get_tensor(output_details[1]['index'])[0] # Class index of detected objects
+            scores = interpreter.get_tensor(output_details[2]['index'])[0] # Confidence of detected objects
 
-            scores = []
-            classes = []
-
-            for score in scoresold:
-                if (score > min_conf_threshold):
-                    scores.append(score)
-                else:
-                    break
-
-            for classnum in range(len(scores)):
-                classes.append(classesold[classnum])
-
-            # bottle:43
             # boxes: [ymin, xmin, ymax, xmax]
 
-            followtotal = classes.count(43)
+            # Loop over all detections and draw detection box if confidence is above minimum threshold
+            maidongnum = 0
+            for i in range(len(scores)):
+                if (scores[i] > min_conf_threshold) and (scores[i] < 1):
+                    # if too large, it will ignore
+                    if (boxes[i][3] - boxes[i][1] > 0.5) or (boxes[i][2] - boxes[i][0] > 0.9):
+                        continue
 
-            if(followtotal == 1):
-                # Loop over all detections and draw detection box if confidence is above minimum threshold
-                for i in range(len(scores)):
+                    maidongnum = maidongnum + 1
                     # Get bounding box coordinates and draw box
                     # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
                     ymin = int(max(1,(boxes[i][0] * imH)))
@@ -435,12 +426,14 @@ class CameraFollowObject(BaseCamera):
                     label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
                     cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
                     cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
+                else:
+                    break
 
-                followindex = classes.index(43)
-                followboxymin = boxes[followindex][0]
-                followboxxmin = boxes[followindex][1]
-                followboxymax = boxes[followindex][2]
-                followboxxmax = boxes[followindex][3]
+            if (maidongnum == 1):
+                followboxymin = boxes[0][0]
+                followboxxmin = boxes[0][1]
+                followboxymax = boxes[0][2]
+                followboxxmax = boxes[0][3]
 
                 followxc=(followboxxmin + followboxxmax)/2
                 followyc=(followboxymin + followboxymax)/2
@@ -448,13 +441,13 @@ class CameraFollowObject(BaseCamera):
                 print(followxc, followyc)
 
                 if (followxc > 0.5):
-                    robot.right(0.2)
-                    time.sleep(0.1)
+                    robot.right(0.3)
+                    time.sleep(0.2)
                     robot.stop()
                     print("left")
                 else:
-                    robot.left(0.2)
-                    time.sleep(0.1)
+                    robot.left(0.3)
+                    time.sleep(0.2)
                     robot.stop()
                     print("right")
 
@@ -469,7 +462,7 @@ class CameraFollowObject(BaseCamera):
             else:
                 robot.stop()            
             # Draw framerate in corner of frame
-            cv2.putText(frame, str(followtotal) + ' bottle', (30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
+            cv2.putText(frame, str(maidongnum) + ' bottle', (30,50),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,0),2,cv2.LINE_AA)
 
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', frame)[1].tobytes()
