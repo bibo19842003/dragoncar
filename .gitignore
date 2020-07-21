@@ -16,3 +16,4 @@ db/*
 logs/*
 log/*
 Sample_TFlite_model/*
+font/*
