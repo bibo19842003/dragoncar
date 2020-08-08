@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block index_block %}<li class="active">{% endblock %}
+{% block body_block %}
+
+<h1><font color="green">Upload Sucessful</font></h1>
+</br>
+
+<form enctype="multipart/form-data" action="/upload_face_pic/" method="post">
+
+   <input type="file" name="facefile" />
+   <br/>
+
+   <input type="text" name="facename" placeholder="please input people name!!! example: tiantian">
+   <br/>
+   <br/>
+
+   <input type="submit" value="upload"/>
+
+</form>
+
+{% endblock %}

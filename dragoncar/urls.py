@@ -11,6 +11,7 @@ urlpatterns = [
     path('dragonvideo/', views.dragonvideo),
     path('videocar/', views.videocar),
     path('detectcarnumber/', views.detectcarnumber),
+    path('detectpeopleface/', views.detectpeopleface),
     path('autocar/', views.autocar),
     path('followme/', views.followme),
     path('followme_feed/', views.followme_feed),
@@ -21,5 +22,12 @@ urlpatterns = [
     path('follow/', views.follow),
     path('followobject/', views.followobject),
     path('followobject_feed/', views.followobject_feed),
+    path('uploadfacepic/', views.uploadfacepic),
+    path('upload_face_pic/', views.upload_face_pic),
+    path('managefacepic/', views.managefacepic),
+    path('photoface/', views.photoface),
+    path('photofacepic_feed/', views.photofacepic_feed),
+    path('photofacemodify/', views.photofacemodify),
+    path('recface_feed/', views.recface_feed),
 ]
 

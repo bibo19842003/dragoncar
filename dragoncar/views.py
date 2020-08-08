@@ -23,6 +23,8 @@ import tarfile
 from hyperlpr import *
 from PIL import Image, ImageDraw, ImageFont
 
+from .models import Uploadimage
+
 try:
     from greenlet import getcurrent as get_ident
 except ImportError:
@@ -33,6 +35,8 @@ except ImportError:
 
 from threading import Thread
 import importlib.util
+from datetime import datetime
+
 
 # Define VideoStream class to handle streaming of video from webcam in separate processing thread
 # Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
@@ -305,6 +309,97 @@ class Camera(BaseCamera):
 # face_names.count(known_face_names[0]) == 1
 
 
+class Recface(BaseCamera):
+    video_source = 0
+
+    def __init__(self):
+        if os.environ.get('OPENCV_CAMERA_SOURCE'):
+            Recface.set_video_source(int(os.environ['OPENCV_CAMERA_SOURCE']))
+        super(Recface, self).__init__()
+
+    @staticmethod
+    def set_video_source(source):
+        Recface.video_source = source
+
+    @staticmethod
+    def frames():
+
+        camera = cv2.VideoCapture(Recface.video_source)
+        if not camera.isOpened():
+            raise RuntimeError('Could not start camera.')
+
+        framex = camera.get(3)
+        framey = camera.get(4)
+        centerx = framex/2
+        centery = framey/2
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        uploadimages = Uploadimage.objects.filter(rec__icontains="1")
+        known_face_encodings = []
+        known_face_names = []
+
+        for uploadimage in uploadimages:
+            filename = uploadimage.filename
+            peoplename = uploadimage.peoplename
+            encodingfile = os.path.dirname(os.path.dirname(__file__)) + '/media/recface/file/' + filename + '.npy'
+            encodingexit = os.path.exists(encodingfile)
+            if encodingexit:
+                known_face_names.append(peoplename)
+                known_face_encodings.append(np.load(encodingfile))
+
+# Initialize some variables
+        face_locations = []
+        face_encodings = []
+        face_names = []
+        process_this_frame = True
+
+        while True:
+            # read current frame
+            _, frame = camera.read()
+
+            # Resize frame of video to 1/4 size for faster face recognition processing
+            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+
+            # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            rgb_small_frame = small_frame[:, :, ::-1]
+
+            if process_this_frame:
+                # Find all the faces and face encodings in the current frame of video
+                face_locations = face_recognition.face_locations(rgb_small_frame)
+                face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+
+                face_names = []
+                for face_encoding in face_encodings:
+                    # See if the face is a match for the known face(s)
+                    matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance=0.50)
+                    name = "Unknown"
+
+                    # If a match was found in known_face_encodings, just use the first one.
+                    if True in matches:
+                        first_match_index = matches.index(True)
+                        name = known_face_names[first_match_index]
+
+                    face_names.append(name)
+
+            process_this_frame = not process_this_frame
+
+            # Display the results
+#            for (top, right, bottom, left), name in zip(face_locations, face_names):
+            for (x, y, w, h), name in zip(face_locations, face_names):
+                # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+                x *= 4
+                y *= 4
+                w *= 4
+                h *= 4
+#                name = name + str(x) + " " + str(y) + " " + str(w) + " " + str(h)
+                # Draw a box around the face
+                cv2.rectangle(frame, (h, x), (y, w), (0, 255, 255), 2)
+                cv2.putText(frame, name, (h + 6, w - 6), font, 1.0, (255, 0, 255), 2)
+
+            # encode as a jpeg image and return it
+            yield cv2.imencode('.jpg', frame)[1].tobytes()
+
+
 # tensorflow lite
 class CameraFollowObject(BaseCamera):
     video_source = 0
@@ -519,6 +614,18 @@ def followme_feed(request):
 # opencv camera
 def followobject_feed(request):
     return StreamingHttpResponse(gen(CameraFollowObject()),
+        content_type='multipart/x-mixed-replace; boundary=frame')
+
+
+# opencv camera
+def recface_feed(request):
+    return StreamingHttpResponse(gen(Recface()),
+        content_type='multipart/x-mixed-replace; boundary=frame')
+
+
+# opencv camera
+def photofacepic_feed(request):
+    return StreamingHttpResponse(gen(Photofacepic()),
         content_type='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -767,5 +874,173 @@ class CameraDetectcarnumber(BaseCamera):
             # encode as a jpeg image and return it
             yield cv2.imencode('.jpg', frame)[1].tobytes()
 
+
+def detectpeopleface(request):
+  if (request.POST.get('power') != None):
+    carpower = float(request.POST.get('power'))/1000
+    print(carpower)
+
+    if "stop" in request.POST:
+      robot.stop()
+
+    if "up" in request.POST:
+      robot.forward(speed=carpower)
+    if "down" in request.POST:
+      robot.backward(speed=carpower)
+    if "left" in request.POST:
+      robot.left(speed=carpower)
+      time.sleep(0.3)
+      robot.stop()
+      time.sleep(0.1)
+      robot.forward(speed=carpower)
+    if "right" in request.POST:
+      robot.right(speed=carpower)
+      time.sleep(0.3)
+      robot.stop()
+      time.sleep(0.1)
+      robot.forward(speed=carpower)
+
+    if "littleup" in request.POST:
+      robot.forward(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+    if "littledown" in request.POST:
+      robot.backward(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+    if "littleleft" in request.POST:
+      robot.left(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+    if "littleright" in request.POST:
+      robot.right(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+
+  return render(request, 'dragoncar/recface/detectpeopleface.html')
+
+
+def uploadfacepic(request):
+    return render(request, 'dragoncar/recface/uploadfacepic.html')
+
+
+def upload_face_pic(request):
+    if request.method == "POST" and request.POST.get('facename') != "":
+        facepic =request.FILES.get("facefile", None)
+        if not facepic:
+            print("no files for upload!")
+            return HttpResponse("no files for upload!")
+        destination = open(os.path.join("media/recface/pic",facepic.name),'wb+')
+        for chunk in facepic.chunks():
+            destination.write(chunk)
+        destination.close()
+        print("upload over!")
+
+        peoplename = request.POST.get('facename')
+        newimage = Uploadimage(filename=facepic.name, filesize=facepic.size, peoplename=peoplename)
+        newimage.save()
+
+        return render(request, 'dragoncar/recface/uploadfacepicok.html')
+    else:
+        return render(request, 'dragoncar/recface/uploadfacepic.html')
+
+
+def managefacepic(request):
+    if request.GET.get('facename') == None:
+        return render(request, 'dragoncar/recface/managefacepic.html')
+
+    if "createrecfile" in request.GET:
+        createfacepicrecfile()
+
+    facename = request.GET.get('facename')
+    uploadimage = Uploadimage.objects.filter(peoplename__icontains=facename)
+
+    return render(request, 'dragoncar/recface/managefacepic.html', {'uploadimage': uploadimage,})
+
+
+class Photofacepic(BaseCamera):
+    video_source = 0
+
+    def __init__(self):
+        if os.environ.get('OPENCV_CAMERA_SOURCE'):
+            Photofacepic.set_video_source(int(os.environ['OPENCV_CAMERA_SOURCE']))
+        super(Photofacepic, self).__init__()
+
+    @staticmethod
+    def set_video_source(source):
+        Photofacepic.video_source = source
+
+    @staticmethod
+    def frames():
+
+        camera = cv2.VideoCapture(Camera.video_source)
+        if not camera.isOpened():
+            raise RuntimeError('Could not start camera.')
+
+        while True:
+            # read current frame
+            _, frame = camera.read()
+
+            # encode as a jpeg image and return it
+            yield cv2.imencode('.jpg', frame)[1].tobytes()
+
+
+def photoface(request):
+    if "photopicface" in request.POST:
+        snapshotphoto()
+        print("photo successful")
+
+    return render(request, 'dragoncar/recface/photoface.html')
+
+
+def snapshotphoto():
+    cam = Camera()
+    photo = cam.get_frame()
+    filename = datetime.now().strftime("%Y%m%d%H%M%S") + ".jpg"
+    file = open(os.path.dirname(os.path.dirname(__file__)) + '/media/recface/pic/' + filename, 'wb+')
+    file.write(photo)
+    file.close()
+
+    filesize = 60000
+    peoplename = "666666"
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    newimage = Uploadimage(filename=filename, filesize=filesize, peoplename=peoplename, timestamp=timestamp)
+    newimage.save()
+
+
+def photofacemodify(request):
+
+    if request.GET.get('timestamp') == None:
+        return render(request, 'dragoncar/recface/managefacepic.html')
+
+    if "cx" in request.GET:
+        timestamp = request.GET.get('timestamp')
+        uploadimage = Uploadimage.objects.filter(timestamp__icontains=timestamp)
+
+        return render(request, 'dragoncar/recface/photofacemodify.html', {'uploadimage': uploadimage,})
+
+    if "gx" in request.GET:
+        timestamp = request.GET.get('timestamp')
+        peoplename = request.GET.get('peoplename')
+        rec = request.GET.get('rec')
+
+        Uploadimage.objects.filter(timestamp=timestamp).update(peoplename=peoplename, rec=rec)
+
+        uploadimage = Uploadimage.objects.filter(timestamp__icontains=timestamp)
+
+        return render(request, 'dragoncar/recface/photofacemodifyok.html', {'uploadimage': uploadimage,})
+
+
+def createfacepicrecfile():
+    uploadimages = Uploadimage.objects.filter(rec__icontains="1")
+    for uploadimage in uploadimages:
+        filename = uploadimage.filename
+        encodingfile = os.path.dirname(os.path.dirname(__file__)) + '/media/recface/file/' + filename + '.npy'
+        encodingexit = os.path.exists(encodingfile)
+        if not encodingexit:
+            peopleimage = face_recognition.load_image_file(os.path.dirname(__file__) + '/../media/recface/pic/' + filename)
+            face_encoding = face_recognition.face_encodings(peopleimage)[0]
+            # np.save(filename, fileencoding)
+            np.save(encodingfile, face_encoding)
 
 

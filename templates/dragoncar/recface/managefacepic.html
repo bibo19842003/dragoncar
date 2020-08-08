@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block powermanage_block %}<li class="active">{% endblock %}
+
+{% block body_block %}
+
+
+<form action="" method="get">
+
+  <div class="form-group">
+      <div class="col-sm-3">
+         <input type="text" class="form-control" name="facename" placeholder="please input people name!!! example: tiantian">
+      </div>
+  </div>
+
+
+  <div class="btn-group">
+    <input type="submit" class="btn btn-default" name="querydata" value="Search"></input>
+    <input type="submit" class="btn btn-default" name="createrecfile" value="Create Rec File"></input>
+    <a href="/upload_face_pic">
+        <input type="button" class="btn btn-default" value="Upload"></input>
+    </a>
+    <a href="/photoface">
+        <input type="button" class="btn btn-default" value="Photo"></input>
+    </a>
+
+  </div>
+
+
+<hr class="hr" />
+
+
+<div class="table-responsive">
+  <table class="table table-condensed table-striped table-hover">
+
+    <thead>
+    <tr>
+      <th>No.</th>
+      <th>name</th>
+      <th>file</th>
+      <th>size</th>
+      <th>rec</th>
+      <th>created</th>
+      <th>timestamp</th>
+      <th>picture</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr>
+      {% for picinfor in uploadimage %}
+      <tr class="info">
+        <td>{{ forloop.counter }}</td>
+        <td id="namex">{{ picinfor.peoplename }}</td>
+        <td id="filenamex">{{ picinfor.filename }}</td>
+        <td id="sizex">{{ picinfor.filesize }}</td>
+        <td id="recx">{{ picinfor.rec }}</td>
+        <td id="createdx">{{ picinfor.created }}</td>
+        <td id="timestampx">
+            <a href="/photofacemodify/?timestamp={{ picinfor.timestamp }}&cx=yinchang" target="_blank">{{ picinfor.timestamp }}</a>
+        </td>
+        <td id="thumImg"><img src="/media/recface/pic/{{ picinfor.filename }}" width="64" onclick="this.width+=100"/></td>
+
+      </tr>
+      {% endfor %}
+    </tr>
+    </tbody>
+
+  </table>
+</div>
+
+
+
+{% endblock %}
+

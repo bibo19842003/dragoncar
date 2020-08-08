@@ -17,3 +17,5 @@ logs/*
 log/*
 Sample_TFlite_model/*
 font/*
+test/*
+media/*

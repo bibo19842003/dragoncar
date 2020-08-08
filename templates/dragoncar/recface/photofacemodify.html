@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block inout_new_block %}<li class="active">{% endblock %}
+{% block head_block %}xxxxxx{% endblock %}
+
+{% block body_block %}
+
+{% for picinfor in uploadimage %}
+
+<form class="form-horizontal" role="form" action="" method="get">
+
+    <div class="form-group">
+        <label for="peoplename" class="col-sm-2 control-label">Face Name</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" name="peoplename" value="{{ picinfor.peoplename }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="timestamp" class="col-sm-2 control-label">Timestamp</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" name="timestamp" value="{{ picinfor.timestamp }}" readonly="readonly">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="rec" class="col-sm-2 control-label">Rec</label>
+        <div class="col-sm-3">
+            <input type="text" class="form-control" name="rec" value="{{ picinfor.rec }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="rec" class="col-sm-2 control-label">thumImg</label>
+        <div class="col-sm-3">
+            <td id="thumImg"><img src="/media/recface/pic/{{ picinfor.filename }}" width="340" onclick="this.width+=100"/></td>
+        </div>
+    </div>
+
+    <hr class="hr" />
+
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-3">
+            <input id="waiting" type="submit" class="btn btn-default" value="UPDATE" data-loading-text="UPDATING......" name="gx">
+            <input id="yc" type="submit" class="btn btn-default" value="yinchang" style="VISIBILITY: hidden" name="cx">
+        </div>
+    </div>
+
+</form>
+
+{% endfor %}
+
+
+
+
+{% endblock %}
