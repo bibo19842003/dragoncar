@@ -29,5 +29,7 @@ urlpatterns = [
     path('photofacepic_feed/', views.photofacepic_feed),
     path('photofacemodify/', views.photofacemodify),
     path('recface_feed/', views.recface_feed),
+    path('qrscan_feed/', views.qrscan_feed),
+    path('qrscan/', views.qrscan),
 ]
 

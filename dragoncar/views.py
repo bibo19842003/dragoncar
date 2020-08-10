@@ -22,6 +22,7 @@ import sys
 import tarfile
 from hyperlpr import *
 from PIL import Image, ImageDraw, ImageFont
+import pyzbar.pyzbar as pyzbar
 
 from .models import Uploadimage
 
@@ -1042,5 +1043,110 @@ def createfacepicrecfile():
             face_encoding = face_recognition.face_encodings(peopleimage)[0]
             # np.save(filename, fileencoding)
             np.save(encodingfile, face_encoding)
+
+
+def qrscan_feed(request):
+    return StreamingHttpResponse(gen(CameraQRScan()),
+        content_type='multipart/x-mixed-replace; boundary=frame')
+
+
+def qrscan(request):
+  if (request.POST.get('power') != None):
+    carpower = float(request.POST.get('power'))/1000
+    print(carpower)
+
+    if "stop" in request.POST:
+      robot.stop()
+
+    if "up" in request.POST:
+      robot.forward(speed=carpower)
+    if "down" in request.POST:
+      robot.backward(speed=carpower)
+    if "left" in request.POST:
+      robot.left(speed=carpower)
+      time.sleep(0.3)
+      robot.stop()
+      time.sleep(0.1)
+      robot.forward(speed=carpower)
+    if "right" in request.POST:
+      robot.right(speed=carpower)
+      time.sleep(0.3)
+      robot.stop()
+      time.sleep(0.1)
+      robot.forward(speed=carpower)
+
+    if "littleup" in request.POST:
+      robot.forward(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+    if "littledown" in request.POST:
+      robot.backward(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+    if "littleleft" in request.POST:
+      robot.left(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+    if "littleright" in request.POST:
+      robot.right(speed=carpower)
+      time.sleep(0.1)
+      robot.stop()
+
+  return render(request, 'dragoncar/qrsacn.html')
+
+
+# detect car number
+class CameraQRScan(BaseCamera):
+    video_source = 0
+
+    def __init__(self):
+        if os.environ.get('OPENCV_CAMERA_SOURCE'):
+            CameraQRScan.set_video_source(int(os.environ['OPENCV_CAMERA_SOURCE']))
+        super(CameraQRScan, self).__init__()
+
+    @staticmethod
+    def set_video_source(source):
+        CameraQRScan.video_source = source
+
+    @staticmethod
+    def frames():
+
+        camera = cv2.VideoCapture(Camera.video_source)
+        if not camera.isOpened():
+            raise RuntimeError('Could not start camera.')
+
+        font = ImageFont.truetype(os.path.dirname(os.path.dirname(__file__)) + '/font/jdjls.ttf', 40)
+
+        while True:
+            # read current frame
+            _, frame = camera.read()
+            img_PIL = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            barcodes = pyzbar.decode(frame)
+            for barcode in barcodes:
+                (x, y, w, h) = barcode.rect
+
+                img = cv2.rectangle(frame,(x, y), (x + w, y + h),(255,0,0),2)
+                img_PIL = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                barcodeData = barcode.data.decode("utf-8")
+                barcodeType = barcode.type
+                text = "Text:" + barcodeData
+
+                # 文字颜色
+                fillColor = (255,0,0)
+                # 文字输出位置
+                position = (10,10)
+                # 输出内容
+                strc = text
+
+                if not isinstance(strc, str):
+                    strc = strc.decode('utf8')
+
+                draw = ImageDraw.Draw(img_PIL)
+                draw.text(position, strc, font=font, fill=fillColor)
+
+                frame = cv2.cvtColor(np.asarray(img_PIL),cv2.COLOR_RGB2BGR)
+
+            # encode as a jpeg image and return it
+            yield cv2.imencode('.jpg', frame)[1].tobytes()
 
 
