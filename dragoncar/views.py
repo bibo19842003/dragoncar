@@ -84,7 +84,7 @@ class VideoStream:
 
 # sensor declare
 robot = Robot(left=(5, 6), right=(23, 24))
-servo = Servo(26)
+servoud = Servo(26)
 ir1 = DigitalInputDevice(25)
 ir2 = DigitalInputDevice(16)
 
@@ -92,6 +92,10 @@ ir2 = DigitalInputDevice(16)
 # script workspace
 scriptfolder = os.path.dirname(os.path.dirname(__file__)) + '/script/'
 
+
+# servo position
+# servo: up and down
+servoudvalue = 0
 
 
 
@@ -683,6 +687,7 @@ def videocar(request):
   if (request.POST.get('power') != None):
     carpower = float(request.POST.get('power'))/1000
     print(carpower)
+    global servoudvalue
 
     if "stop" in request.POST:
       robot.stop()
@@ -720,6 +725,14 @@ def videocar(request):
       robot.right(speed=carpower)
       time.sleep(0.1)
       robot.stop()
+    if "servod" in request.POST:
+      if servoudvalue < 1.0:
+        servoudvalue = servoudvalue + 0.1
+        servoud.value = servoudvalue
+    if "servou" in request.POST:
+      if servoudvalue > -1.0:
+        servoudvalue = servoudvalue - 0.1
+        servoud.value = servoudvalue
 
   return render(request, 'dragoncar/videocar.html')
 

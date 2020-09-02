@@ -3,10 +3,10 @@
 
 {% block body_block %}
 
-<form class="form-horizontal" role="form" action="" method="post" target="targetIfr">
+  <form class="form-horizontal" role="form" action="" method="post" target="targetIfr">
 
     <div class="row clearfix">
-            <img src='/video_feed' width="100%">
+      <img src='/video_feed' width="100%">
     </div>
 
     </br>
@@ -44,28 +44,18 @@
       <input id="littledown" name="littledown" type="submit" class="btn btn-primary" value="l-down" style="width:60px; float:right;">
       <input id="littlerightdown" name="littlerightdown" type="submit" class="btn btn-default" disabled="disabled" value="" style="width:60px; float:right;">
 
+      </br>
+
+      <center>
+          <input id="servou" name="servou" type="submit" class="btn btn-primary" value="servo-up" style="width:100px;">
+          <input id="servod" name="servod" type="submit" class="btn btn-primary" value="servo-down" style="width:100px;">
+      </center>
+
     </div>
 
-</form>
+  </form>
 
-<iframe name="targetIfr" style="display:none"></iframe>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  <iframe name="targetIfr" style="display:none"></iframe>
 
 
 {% endblock %}
