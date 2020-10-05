@@ -31,5 +31,7 @@ urlpatterns = [
     path('recface_feed/', views.recface_feed),
     path('qrscan_feed/', views.qrscan_feed),
     path('qrscan/', views.qrscan),
+    path('objectdetect/', views.objectdetect),
+    path('objectdetect_feed/', views.objectdetect_feed),
 ]
 
