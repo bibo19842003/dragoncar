@@ -38,6 +38,18 @@ from threading import Thread
 import importlib.util
 from datetime import datetime
 
+# vosk
+from vosk import Model, KaldiRecognizer, SetLogLevel
+import sys
+import os
+import wave
+import json
+
+# common
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# vosk
+vosk_model = Model(BASE_DIR + "/model/vosk")
 
 # Define VideoStream class to handle streaming of video from webcam in separate processing thread
 # Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
@@ -898,6 +910,10 @@ def voicecontrol(request):
   return render(request, 'dragoncar/voicecontrol.html')
 
 
+def voicecar(request):
+  return render(request, 'dragoncar/voicecar.html')
+
+
 def uploadfile(request):
   return render(request, 'dragoncar/uploadfile.html')
 
@@ -913,6 +929,75 @@ def upload_file(request):
             destination.write(chunk)
         destination.close()
         print("upload over!")
+        return HttpResponse("upload over!")
+
+
+def upload_voicecar(request):
+    if request.method == "POST":
+        myFile =request.FILES.get("myfile", None)
+        if not myFile:
+            print("no files for upload!")
+            return HttpResponse("no files for upload!")
+        destination = open(os.path.join("media/voice",myFile.name),'wb+')
+        for chunk in myFile.chunks():
+            destination.write(chunk)
+        destination.close()
+
+        wf = wave.open(BASE_DIR + '/media/voice/voicecar.wav', "rb")
+        rec = KaldiRecognizer(vosk_model, wf.getframerate())
+
+        while True:
+            data = wf.readframes(4000)
+            if len(data) == 0:
+                 break
+            if rec.AcceptWaveform(data):
+                rec.Result()
+            else:
+                rec.PartialResult()
+
+        data = json.loads(rec.FinalResult().replace("\n",""))
+        voicetext = data['text']
+
+        print(voicetext)
+
+        qian = ["前", "前进", "向前", "钱"]
+        yizhiqian = ["一直前", "一直前进", "一 值钱", "一直 前进", "以 值钱", "一直 强劲", "一直 前列"]
+        hou = ["后", "后退", "向后", "倒退", "向 后"]
+        yizhihou = ["一直退", "一直 退", "一直 后退"]
+        zuo = ["左", "左转", "向左", "左转弯", "着", "走啊", "着 转弯", "向着", "向 走啊"]
+        you = ["右", "向右", "右转", "右转弯", "又", "向 右", "右转 啦", "由 转弯", "享有", "有"]
+        ting = ["停车", "刹车", "停下", "停"]
+
+        if voicetext in qian:
+            print("qianqianqian")
+            robot.forward(0.5)
+            time.sleep(0.1)
+            robot.stop()
+        elif voicetext in yizhiqian:
+            print("yizhiqian")
+            robot.forward(0.5)
+        elif voicetext in hou:
+            print("hou")
+            robot.backward(0.5)
+            time.sleep(0.1)
+            robot.stop()
+        elif voicetext in yizhihou:
+            print("yizhihou")
+            robot.backward(0.5)
+        elif voicetext in zuo:
+            print("zuo")
+            robot.left(0.5)
+            time.sleep(0.1)
+            robot.stop()
+        elif voicetext in you:
+            print("you")
+            robot.right(0.5)
+            time.sleep(0.1)
+            robot.stop()
+        elif voicetext in ting:
+            print("tingtingting")
+            robot.stop()
+
         return HttpResponse("upload over!")
 
 
