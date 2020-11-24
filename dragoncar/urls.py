@@ -9,6 +9,7 @@ urlpatterns = [
     path('detectcarnumber_feed/', views.detectcarnumber_feed),
     path('wificontrol/', views.wificontrol),
     path('dragonvideo/', views.dragonvideo),
+    path('dragonvoice/', views.dragonvoice),
     path('videocar/', views.videocar),
     path('detectcarnumber/', views.detectcarnumber),
     path('detectpeopleface/', views.detectpeopleface),

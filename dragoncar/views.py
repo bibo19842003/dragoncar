@@ -1032,6 +1032,10 @@ def dragonvideo(request):
   return render(request, 'dragoncar/dragonvideo.html')
 
 
+def dragonvoice(request):
+  return render(request, 'dragoncar/dragonvoice.html')
+
+
 def detectcarnumber(request):
   if (request.POST.get('power') != None):
     carpower = float(request.POST.get('power'))/1000
