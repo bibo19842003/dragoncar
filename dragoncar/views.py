@@ -943,28 +943,26 @@ def upload_voicecar(request):
             destination.write(chunk)
         destination.close()
 
+        rec = KaldiRecognizer(vosk_model, 16000)
         wf = wave.open(BASE_DIR + '/media/voice/voicecar.wav', "rb")
-        rec = KaldiRecognizer(vosk_model, wf.getframerate())
 
         while True:
             data = wf.readframes(4000)
             if len(data) == 0:
-                 break
+                break
             if rec.AcceptWaveform(data):
                 rec.Result()
-            else:
-                rec.PartialResult()
 
-        data = json.loads(rec.FinalResult().replace("\n",""))
+        data = json.loads(rec.FinalResult())
         voicetext = data['text']
 
         print(voicetext)
 
         qian = ["前", "前进", "向前", "钱"]
-        yizhiqian = ["一直前", "一直前进", "一 值钱", "一直 前进", "以 值钱", "一直 强劲", "一直 前列"]
-        hou = ["后", "后退", "向后", "倒退", "向 后"]
-        yizhihou = ["一直退", "一直 退", "一直 后退"]
-        zuo = ["左", "左转", "向左", "左转弯", "着", "走啊", "着 转弯", "向着", "向 走啊"]
+        yizhiqian = ["一直前", "一直前进", "一 值钱", "一直 前进", "以 值钱", "一直 强劲", "一直 前列", "以 之前"]
+        hou = ["后", "后退", "向后", "倒退", "向 后", "下 后"]
+        yizhihou = ["一直退", "一直 退", "一直 后退", "一直 后"]
+        zuo = ["左", "左转", "向左", "左转弯", "着", "走啊", "着 转弯", "向着", "向 走啊", "左手 啊", "左 转"]
         you = ["右", "向右", "右转", "右转弯", "又", "向 右", "右转 啦", "由 转弯", "享有", "有"]
         ting = ["停车", "刹车", "停下", "停"]
 
