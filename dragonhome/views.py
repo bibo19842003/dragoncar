@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.template import RequestContext, loader, Context
 from django.contrib.auth.decorators import login_required
 import urllib.request
+from .models import Homedevice
 
 # vosk
 from vosk import Model, KaldiRecognizer
@@ -15,6 +16,7 @@ import configparser
 
 # common
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+deviceip = "127.0.0.1"
 
 # vosk
 vosk_model = Model(BASE_DIR + "/model/vosk")
@@ -25,11 +27,18 @@ dragon_cf.read(BASE_DIR + '/dragonconfig/voice_rec.ini')
 
 
 def home(request):
-  return render(request, 'dragonhome/home.html')
+    return render(request, 'dragonhome/home.html')
 
 
 def homesensor(request):
-  return render(request, 'dragonhome/homesensor.html')
+    device = Homedevice.objects.all().order_by('ip')
+
+    if (request.GET.get('deviceip') != None):
+        global deviceip
+        deviceip = request.GET.get('deviceip')
+        if deviceip=="":
+            return render(request, 'dragonhome/homesensor.html', {'device': device,})
+    return render(request, 'dragonhome/homesensor.html', {'device': device,})
 
 
 def upload_home(request):
@@ -68,31 +77,29 @@ def upload_home(request):
         led_all_close = dragon_cf['voicerec']['led_all_close'].split(',')
 
         if voicetext in led_red_open:
-            with urllib.request.urlopen('http://192.168.1.9/?rledstatus=1') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?rledstatus=1') as response:
                 html = response.read()
         elif voicetext in led_red_close:
-            with urllib.request.urlopen('http://192.168.1.9/?rledstatus=0') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?rledstatus=0') as response:
                 html = response.read()
         elif voicetext in led_yellow_open:
-            with urllib.request.urlopen('http://192.168.1.9/?yledstatus=1') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?yledstatus=1') as response:
                 html = response.read()
-
         elif voicetext in led_yellow_close:
-            with urllib.request.urlopen('http://192.168.1.9/?yledstatus=0') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?yledstatus=0') as response:
                 html = response.read()
         elif voicetext in led_green_open:
-            with urllib.request.urlopen('http://192.168.1.9/?gledstatus=1') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?gledstatus=1') as response:
                 html = response.read()
         elif voicetext in led_green_close:
-            with urllib.request.urlopen('http://192.168.1.9/?gledstatus=0') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?gledstatus=0') as response:
                 html = response.read()
         elif voicetext in led_all_open:
-            with urllib.request.urlopen('http://192.168.1.9/?gledstatus=1&yledstatus=1&rledstatus=1') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?gledstatus=1&yledstatus=1&rledstatus=1') as response:
                 html = response.read() 
         elif voicetext in led_all_close:
-            with urllib.request.urlopen('http://192.168.1.9/?gledstatus=0&yledstatus=0&rledstatus=0') as response:
+            with urllib.request.urlopen('http://' + deviceip + '/?gledstatus=0&yledstatus=0&rledstatus=0') as response:
                 html = response.read() 
 
         return HttpResponse("upload over!")
-
 
