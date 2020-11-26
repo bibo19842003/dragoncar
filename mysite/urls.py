@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path(r'avatar/', include('avatar.urls')),
     path('', include('dragoncar.urls')),
+    path('', include('dragonhome.urls')),
 
     path('accounts/login/', auth_views.LoginView.as_view(template_name='admin/login.html')),
     path('accounts/logout/', auth_views.LogoutView.as_view()),
