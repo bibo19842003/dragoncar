@@ -20,3 +20,5 @@ font/*
 test/*
 media/*
 model/*
+dragonconfig/voice_rec.ini
+dragonconfig/test.py

@@ -44,12 +44,19 @@ import sys
 import os
 import wave
 import json
+import configparser
 
 # common
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # vosk
 vosk_model = Model(BASE_DIR + "/model/vosk")
+
+# parse config file
+dragon_cf = configparser.ConfigParser()
+dragon_cf.read(BASE_DIR + '/dragonconfig/voice_rec.ini')
+
+
 
 # Define VideoStream class to handle streaming of video from webcam in separate processing thread
 # Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
@@ -958,13 +965,13 @@ def upload_voicecar(request):
 
         print(voicetext)
 
-        qian = ["前", "前进", "向前", "钱"]
-        yizhiqian = ["一直前", "一直前进", "一 值钱", "一直 前进", "以 值钱", "一直 强劲", "一直 前列", "以 之前"]
-        hou = ["后", "后退", "向后", "倒退", "向 后", "下 后"]
-        yizhihou = ["一直退", "一直 退", "一直 后退", "一直 后"]
-        zuo = ["左", "左转", "向左", "左转弯", "着", "走啊", "着 转弯", "向着", "向 走啊", "左手 啊", "左 转"]
-        you = ["右", "向右", "右转", "右转弯", "又", "向 右", "右转 啦", "由 转弯", "享有", "有"]
-        ting = ["停车", "刹车", "停下", "停"]
+        qian = dragon_cf['voicerec']['qian'].split(',')
+        yizhiqian = dragon_cf['voicerec']['yizhiqian'].split(',')
+        hou = dragon_cf['voicerec']['hou'].split(',')
+        yizhihou = dragon_cf['voicerec']['yizhihou'].split(',')
+        zuo = dragon_cf['voicerec']['zuo'].split(',')
+        you = dragon_cf['voicerec']['you'].split(',')
+        ting = dragon_cf['voicerec']['ting'].split(',')
 
         if voicetext in qian:
             print("qianqianqian")
