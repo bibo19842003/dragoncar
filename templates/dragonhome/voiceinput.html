@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block home_block %}<li class="active">{% endblock %}
+{% block head_block %}Home Sensor{% endblock %}
+
+{% block body_block %}
+
+<form class="form-horizontal" role="form" action="" method="get">
+   <div class="form-group">
+      <label for="firstname" class="col-sm-2 control-label">Select Voice Item</label>
+      <select class="btn btn-default" name="selectsec">
+          {% for sec in voice_rec_sec %}
+              <option>{{ sec }}</option>
+          {% endfor %}
+      </select>
+      <input type="submit" class="btn btn-default" name="cip" value="ADD"></input>
+   </div>
+
+</form>
+
+
+        led_red_open = ["红灯开", "开红灯",]
+        </br>
+        led_red_close = ["红灯关", "关红灯",]
+        </br>
+        led_yellow_open = ["黄灯开", "开黄灯",]
+        </br>
+        led_yellow_close = ["黄灯关", "关黄灯",]
+        </br>
+        led_green_open = ["绿灯开", "开绿灯",]
+        </br>
+        led_green_close = ["绿灯关", "关绿灯",]
+        </br>
+        led_all_open = ["全开", "全部开灯",]
+        </br>
+        led_all_close = ["全关", "全部关灯",]
+        </br>
+
+
+    <script>
+        console.log(Tips);
+    </script>
+    <script src="../static/js/recorder/recorder.wav.min.js"></script>
+    <script src="../static/js/recorder/frequency.histogram.view.js"></script>
+    <script src="../static/js/recorder/lib.fft.js"></script>
+
+    <!-- web display -->
+    <div class="main">
+	<div class="mainBox">
+            <!-- button  -->
+            <div class="pd btns">
+		<button onmousedown="recOpen()" onmouseup="recStop()" ontouchstart="recOpen()" ontouchend="recStop()" style="margin-right:80px;width:250px;height:200px;">Clik Me</button>
+			
+                <button onclick="recPlay()">Play</button>
+            </div>
+		
+            <!-- wave -->
+            <div class="pd recpower">
+		<div style="height:40px;width:300px;background:#999;position:relative;">
+                    <div class="recpowerx" style="height:40px;background:#0B1;position:absolute;"></div>
+                    <div class="recpowert" style="padding-left:50px; line-height:40px; position: relative;"></div>
+		</div>
+            </div>
+
+            <div class="pd waveBox">
+		<div style="border:1px solid #ccc;display:inline-block"><div style="height:100px;width:300px;" class="recwave"></div></div>
+            </div>
+	</div>
+	
+	<!-- log -->
+	<div class="mainBox">
+            <div class="reclog"></div>
+	</div>
+    </div>
+
+
+    <!--how to record  -->
+    <script>
+
+    var rec,wave,recBlob;
+    var recOpen=function(){
+	rec=null;
+	wave=null;
+	recBlob=null;
+	var newRec=Recorder({
+            type:"wav",sampleRate:16000,bitRate:16
+            ,onProcess:function(buffers,powerLevel,bufferDuration,bufferSampleRate,newBufferIdx,asyncEnd){
+		document.querySelector(".recpowerx").style.width=powerLevel+"%";
+		document.querySelector(".recpowert").innerText=bufferDuration+" / "+powerLevel;
+			
+		wave.input(buffers[buffers.length-1],powerLevel,bufferSampleRate);
+	    }
+        });
+
+        createDelayDialog();
+        newRec.open(function(){
+            dialogCancel();
+            rec=newRec;
+		
+            wave=Recorder.FrequencyHistogramView({elem:".recwave"});
+		
+            reclog("it can record now.",2);
+
+            rec.start();
+            reclog("started...");
+
+        },function(msg,isUserNotAllow){
+            dialogCancel();
+            reclog((isUserNotAllow?"UserNotAllow，":"")+"turn on record failue!!!："+msg,1);
+        });
+	
+        window.waitDialogClick=function(){
+            dialogCancel();
+            reclog("turn on record failue, <span style='color:#f00'>user click the cancel button</span>",1);
+
+        };
+    };
+
+
+
+    /** stop record **/
+    /** record end, get the wave file**/
+    function recStop(){
+	if(!(rec&&Recorder.IsOpen())){
+            reclog("please turn on record",1);
+            return;
+	};
+	rec.stop(function(blob,duration){
+            console.log(blob,(window.URL||webkitURL).createObjectURL(blob),"time:"+duration+"ms");
+		
+            recBlob=blob;
+            reclog("wav size:"+duration+"ms "+blob.size+" B, it can play and upload now",2);
+
+            recUpload();
+
+            rec.close();
+            reclog("turned off record");
+	},function(msg){
+            reclog("record faulue!!!:"+msg,1);
+	});
+    };
+
+
+    /** play **/
+    function recPlay(){
+	if(!recBlob){
+            reclog("please start record, and upload",1);
+            return;
+	};
+	var cls=("a"+Math.random()).replace(".","");
+	reclog('playing: <span class="'+cls+'"></span>');
+	var audio=document.createElement("audio");
+	audio.controls=true;
+	document.querySelector("."+cls).appendChild(audio);
+	audio.src=(window.URL||webkitURL).createObjectURL(recBlob);
+	audio.play();
+	
+	setTimeout(function(){
+            (window.URL||webkitURL).revokeObjectURL(audio.src);
+	},5000);
+    };
+
+
+    /** upload **/
+    function recUpload(){
+	var blob=recBlob;
+	if(!blob){
+            reclog("请先录音，然后停止后再上传",1);
+            return;
+	};
+	
+	var api="/upload_voice_input/";
+	var onreadystatechange=function(title){
+            return function(){
+                if(xhr.readyState==4){
+                    if(xhr.status==200){
+			reclog(title+"上传成功",2);
+                    }else{
+			reclog(title+"it does not upload, it only test!!!", "#d8c1a0");
+			console.error(title+"上传失败",xhr.status,xhr.responseText);
+                    };
+		};
+            };
+	};
+	reclog("it is uploading，please wait...");
+
+	var form=new FormData();
+	form.append("myfile",blob,"voicehome.wav");
+
+	// other para
+	
+	var xhr=new XMLHttpRequest();
+	xhr.open("POST", api);
+	xhr.onreadystatechange=onreadystatechange("upload method: FormData");
+	xhr.send(form);
+    };
+
+
+    var createDelayDialog=function(){
+	dialogInt=setTimeout(function(){
+            showDialog();
+	},8000);
+    };
+    var dialogInt;
+    var dialogCancel=function(){
+	clearTimeout(dialogInt);
+	
+	var elems=document.querySelectorAll(".waitDialog");
+	for(var i=0;i<elems.length;i++){
+            elems[i].parentNode.removeChild(elems[i]);
+	};
+    };
+
+
+    </script>
+
+
+    <script>
+        function reclog(s,color){
+	    var now=new Date();
+	    var t=("0"+now.getHours()).substr(-2)
+		+":"+("0"+now.getMinutes()).substr(-2)
+		+":"+("0"+now.getSeconds()).substr(-2);
+            var div=document.createElement("div");
+            var elem=document.querySelector(".reclog");
+            elem.insertBefore(div,elem.firstChild);
+            div.innerHTML='<div style="color:'+(!color?"":color==1?"red":color==2?"#0b1":color)+'">['+t+']'+s+'</div>';
+        };
+
+        reclog(Tips);
+    </script>
+
+
+    <style>
+
+        .main{
+            max-width:700px;
+            margin:0 auto;
+            padding-bottom:80px
+        }
+
+        .mainBox{
+            margin-top:12px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #fff;
+            --border: 1px solid #f60;
+            box-shadow: 2px 2px 3px #aaa;
+        }
+
+        .btns button{
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            background: #f60;
+            color:#fff;
+            padding: 0 15px;
+            margin:3px 20px 3px 0;
+            line-height: 36px;
+            height: 36px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+        .btns button:active{
+            background: #f00;
+        }
+
+        .pd{
+            padding:0 0 6px 0;
+        }
+        .lb{
+            display:inline-block;
+            vertical-align: middle;
+            background:#00940e;
+            color:#fff;
+            font-size:14px;
+            padding:2px 8px;
+            border-radius: 99px;
+        }
+    </style>
+
+{% endblock %}
+
+<!--thanks for https://github.com/xiangyuecn/Recorder   -->

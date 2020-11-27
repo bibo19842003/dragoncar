@@ -12,18 +12,23 @@ import sys
 import json
 import os
 import wave
+
 import configparser
+import sys
+
 
 # common
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 deviceip = "127.0.0.1"
+voice_section = "please select"
 
 # vosk
 vosk_model = Model(BASE_DIR + "/model/vosk")
 
 # parse config file
 dragon_cf = configparser.ConfigParser()
-dragon_cf.read(BASE_DIR + '/dragonconfig/voice_rec.ini')
+voice_rec_config = BASE_DIR + '/dragonconfig/voice_rec.ini'
+dragon_cf.read(voice_rec_config)
 
 
 def home(request):
@@ -102,4 +107,51 @@ def upload_home(request):
                 html = response.read() 
 
         return HttpResponse("upload over!")
+
+
+def voiceinput(request):
+    voice_rec_sec = dragon_cf.options('voicerec')
+
+    if (request.GET.get('selectsec') != None):
+        global voice_section
+        voice_section = request.GET.get('selectsec')
+        if voice_section=="":
+            return render(request, 'dragonhome/voiceinput.html', {'voice_rec_sec': voice_rec_sec,})
+    return render(request, 'dragonhome/voiceinput.html', {'voice_rec_sec': voice_rec_sec,})
+
+
+def upload_voice_input(request):
+    if request.method == "POST":
+        myFile =request.FILES.get("myfile", None)
+        if not myFile:
+            print("no files for upload!")
+            return HttpResponse("no files for upload!")
+        destination = open(os.path.join("media/voice",myFile.name),'wb+')
+        for chunk in myFile.chunks():
+            destination.write(chunk)
+        destination.close()
+
+        rec = KaldiRecognizer(vosk_model, 16000)
+        wf = wave.open(BASE_DIR + '/media/voice/voicehome.wav', "rb")
+
+        while True:
+            data = wf.readframes(4000)
+            if len(data) == 0:
+                break
+            if rec.AcceptWaveform(data):
+                rec.Result()
+
+        data = json.loads(rec.FinalResult())
+        voicetext = data['text']
+        print(voicetext)
+
+        selectitem = dragon_cf['voicerec'][voice_section]
+        item_value_array = selectitem.split(',')
+        if voicetext not in item_value_array:
+            newvalue=  selectitem+ ',' + voicetext
+            dragon_cf.set('voicerec', voice_section, newvalue)
+            dragon_cf.write(open(voice_rec_config, 'w'))
+            return HttpResponse("voice added added added")
+
+        return HttpResponse("voice already exist")
 
